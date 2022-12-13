@@ -1,9 +1,13 @@
 import express from "express"
 import cors from "cors"
+import csrf from "csurf"
+import cookieParser from "cookie-parser"
 
 const morgan = require('morgan')
 require('dotenv').config()
 import 'express-async-errors'
+
+const csrfProtection = csrf({cookie: true})
 
 //routers
 import authRoutes from './routes/auth.js'
@@ -16,20 +20,29 @@ import notFound from "./middlewares/not-found";
 const app = express();
 
 //db connection
-mongoose.connect(process.env.DATABASE).then(()=> console.log('db connected')).catch((err) => console.log('db connection error'))
+mongoose.connect(process.env.DATABASE).then(() => console.log('db connected')).catch((err) => console.log('db connection error'))
 
 //apply middlewares
 app.use(cors())
 app.use(express.json())
+app.use(cookieParser())
 app.use(morgan('dev'))
 
 //route
 app.use('/api/auth', authRoutes)
 
+//csrf
+app.use(csrfProtection)
+
+app.get('/api/csrf-token', (req, res) => {
+    res.json({csrfToken: req.csrfToken()})
+})
+
 //not found
 app.use(notFound)
 //error handler
 app.use(errorHandler)
+
 
 //port
 const port = process.env.PORT || 8000;
