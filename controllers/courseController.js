@@ -1,5 +1,8 @@
 import {nanoid} from "nanoid";
 import AWS from "aws-sdk"
+import Course from "../model/course";
+import slugify from "slugify";
+
 
 const awsConfig = {
     accessKeyId: process.env.AWS_ACCESS_KEY,
@@ -55,3 +58,27 @@ export const uploadImage = async (req, res) => {
         res.send(data);
     })
 };
+
+export const create = async (req, res) => {
+    const alreadyExists = await Course.findOne({
+        slug: slugify(req.body.name.toLowerCase())
+    })
+    if (alreadyExists) return res.status(400).send("Title is already taken");
+    const course = await new Course({
+        slug: slugify(req.body.name),
+        instructor: req.user._id,
+        ...req.body
+    }).save();
+
+    res.json(course)
+};
+
+export const instructorCourses = async (req, res) => {
+    const courses = await Course.find({instructor: req.user._id}).sort({createdAt: -1}).exec();
+    res.json(courses)
+}
+
+export const getCourse = async (req, res) => {
+    const course = await Course.findOne({slug: req.params.slug}).populate('instructor', '_id name').exec();
+    res.json(course)
+}

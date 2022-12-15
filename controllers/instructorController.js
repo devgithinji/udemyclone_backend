@@ -8,7 +8,7 @@ require('dotenv').config()
 
 export const currentInstructor = async (req, res) => {
     let user = await User.findById(req.user._id).select("-password").exec();
-    if (!user.role.includes('instructor')) return res.sendStatus(403);
+    if (!user.role.includes('Instructor')) return res.sendStatus(403);
     return res.json({ok: true})
 }
 
@@ -20,7 +20,7 @@ export const getAccountStatus = async (req, res) => {
     const updatedUser = await User.findOneAndUpdate(user._id,
         {
             stripe_seller: 'seller_acc',
-            $addToSet: {role: 'instructor'}
+            $addToSet: {role: 'Instructor'}
         },
         {new: true}
     ).exec();
